@@ -176,48 +176,10 @@ if ($method === "DELETE") {
     } else {
         require_once "includes/functions.php";
 
-        // // READ DATA PROVIDED BY THE REQUEST 
-        // $data = json_decode(file_get_contents("php://input"));
+        // CALL THE FUNCTION TO DELETE THE COURSE
+        $res = deleteCourse($conn, $id);
 
-        // // CHECK IF ALL NEEDED DATA WERE SET
-        // if (!isset($data->title) || !isset($data->description) || !isset($data->status) || !isset($data->is_premium)) {
-        //     http_response_code(400);
-        //     $error = "Missing Data!";
-        //     echo ($error);
-        //     exit();
-        // }
-
-        // $title = $data->title;
-        // $description = $data->description;
-        // $status = $data->status;
-        // $is_premium = $data->is_premium;
-
-        // // VALIDATE THE DATA
-        // if ($title == "" || $description == "") {
-        //     http_response_code(400);
-        //     $error = "Both Title AND Description are required!";
-        //     echo ($error);
-        //     exit();
-        // }
-
-        // if ($status != "Pending" && $status != "Published") {
-        //     http_response_code(400);
-        //     $error = "Status should have a value of 'Pending' or 'Published'!";
-        //     echo ($error);
-        //     exit();
-        // }
-
-        // if ($is_premium != true && $is_premium != false) {
-        //     http_response_code(400);
-        //     $error = "Is_premium should have a boolean value!";
-        //     echo ($error);
-        //     exit();
-        // }
-
-        // // CALL THE FUNCTION TO CREATE THE NEW COURSE
-        // $res = createCourse($conn, $title, $description, $status, $is_premium);
-
-        // // PRINT THE RESPONSE
-        // echo ($res);
+        // PRINT THE RESPONSE
+        echo ($res);
     }
 }

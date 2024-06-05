@@ -125,3 +125,31 @@ function updateCourse($conn, $id, $title, $description, $status, $is_premium)
     mysqli_stmt_close($stmt);
     return json_encode($response);
 }
+
+function deleteCourse($conn, $id)
+{
+    // FUNCTION THAT UPDATES A COURSE THAT MATCHES THE GIVEN ID USING THE PROVIDED DATA
+    // PREPARE THE QUERY
+    $query = "DELETE FROM courses WHERE id = ?;";
+
+    // PREPARE THE STATEMENT & HANDLE ERROR UPON CONNECTION
+    $stmt = mysqli_stmt_init($conn);
+
+    if (!mysqli_stmt_prepare($stmt, $query)) {
+        $error = "Statement preparation failed! PUT /courses/" . $id;
+        return json_encode($error);
+    }
+
+    // BIND THE PARAMETER VALUES TO THE QUERY -> ADDED SECURITY
+    mysqli_stmt_bind_param($stmt, "i", $id);
+
+    // EXECUTE THE STATEMENT & RETURN THE DATA IN JSON FORMAT
+    mysqli_stmt_execute($stmt);
+
+    $response = [
+        "error" => mysqli_stmt_error($stmt) ? mysqli_stmt_error($stmt) : "No error"
+    ];
+
+    mysqli_stmt_close($stmt);
+    return json_encode($response);
+}
