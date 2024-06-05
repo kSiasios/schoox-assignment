@@ -118,42 +118,49 @@ if ($method === "PUT") {
 
 
         // CHECK AT LEAST ONE DATA ENTRY HAS A VALUE
-
+        if (
+            $title == "" && $description == "" &&
+            ($status != "Pending" && $status != "Published") &&
+            ($is_premium != true && $is_premium != false)
+        ) {
+            http_response_code(400);
+            $error = "At least one of the parameters must be updated!";
+            echo ($error);
+            exit();
+        }
 
         // CHECK IF THE ENTRY EXISTS IN THE DB
+        $entry = json_decode(getCourseByID($conn, $id))[0];
 
-
+        if (isset($entry->error)) {
+            http_response_code(400);
+            echo ($entry->error);
+            exit();
+        }
 
         // IF THE PROVIDED DATA IS DIFFERENT THAN THE DATA OF THE ENTRY AND NOT NULL
         // KEEP THE NEW DATA, OTHERWISE -> SET THE NEW DATA = THE OLD DATA
 
+        if ($title == "") {
+            $title = $entry->title;
+        }
 
-
-        // UPDATE THE ENTRY
-        // VALIDATE THE DATA
-        if ($title == "" || $description == "") {
-            http_response_code(400);
-            $error = "Both Title AND Description are required!";
-            echo ($error);
-            exit();
+        if ($description == "") {
+            $description = $entry->description;
         }
 
         if ($status != "Pending" && $status != "Published") {
-            http_response_code(400);
-            $error = "Status should have a value of 'Pending' or 'Published'!";
-            echo ($error);
-            exit();
+            $status = $entry->status;
         }
 
-        if ($is_premium != true && $is_premium != false) {
-            http_response_code(400);
-            $error = "Is_premium should have a boolean value!";
-            echo ($error);
-            exit();
+        if ($is_premium != true && $is_premium != false || $is_premium == "") {
+            $is_premium = $entry->is_premium == 1;
         }
 
-        // CALL THE FUNCTION TO CREATE THE NEW COURSE
-        $res = createCourse($conn, $title, $description, $status, $is_premium);
+        // UPDATE THE ENTRY
+        // VALIDATE THE DATA
+        // CALL THE FUNCTION TO UPDATE THE COURSE
+        $res = updateCourse($conn, $id, $title, $description, $status, $is_premium);
 
         // PRINT THE RESPONSE
         echo ($res);
@@ -169,48 +176,48 @@ if ($method === "DELETE") {
     } else {
         require_once "includes/functions.php";
 
-        // READ DATA PROVIDED BY THE REQUEST 
-        $data = json_decode(file_get_contents("php://input"));
+        // // READ DATA PROVIDED BY THE REQUEST 
+        // $data = json_decode(file_get_contents("php://input"));
 
-        // CHECK IF ALL NEEDED DATA WERE SET
-        if (!isset($data->title) || !isset($data->description) || !isset($data->status) || !isset($data->is_premium)) {
-            http_response_code(400);
-            $error = "Missing Data!";
-            echo ($error);
-            exit();
-        }
+        // // CHECK IF ALL NEEDED DATA WERE SET
+        // if (!isset($data->title) || !isset($data->description) || !isset($data->status) || !isset($data->is_premium)) {
+        //     http_response_code(400);
+        //     $error = "Missing Data!";
+        //     echo ($error);
+        //     exit();
+        // }
 
-        $title = $data->title;
-        $description = $data->description;
-        $status = $data->status;
-        $is_premium = $data->is_premium;
+        // $title = $data->title;
+        // $description = $data->description;
+        // $status = $data->status;
+        // $is_premium = $data->is_premium;
 
-        // VALIDATE THE DATA
-        if ($title == "" || $description == "") {
-            http_response_code(400);
-            $error = "Both Title AND Description are required!";
-            echo ($error);
-            exit();
-        }
+        // // VALIDATE THE DATA
+        // if ($title == "" || $description == "") {
+        //     http_response_code(400);
+        //     $error = "Both Title AND Description are required!";
+        //     echo ($error);
+        //     exit();
+        // }
 
-        if ($status != "Pending" && $status != "Published") {
-            http_response_code(400);
-            $error = "Status should have a value of 'Pending' or 'Published'!";
-            echo ($error);
-            exit();
-        }
+        // if ($status != "Pending" && $status != "Published") {
+        //     http_response_code(400);
+        //     $error = "Status should have a value of 'Pending' or 'Published'!";
+        //     echo ($error);
+        //     exit();
+        // }
 
-        if ($is_premium != true && $is_premium != false) {
-            http_response_code(400);
-            $error = "Is_premium should have a boolean value!";
-            echo ($error);
-            exit();
-        }
+        // if ($is_premium != true && $is_premium != false) {
+        //     http_response_code(400);
+        //     $error = "Is_premium should have a boolean value!";
+        //     echo ($error);
+        //     exit();
+        // }
 
-        // CALL THE FUNCTION TO CREATE THE NEW COURSE
-        $res = createCourse($conn, $title, $description, $status, $is_premium);
+        // // CALL THE FUNCTION TO CREATE THE NEW COURSE
+        // $res = createCourse($conn, $title, $description, $status, $is_premium);
 
-        // PRINT THE RESPONSE
-        echo ($res);
+        // // PRINT THE RESPONSE
+        // echo ($res);
     }
 }
