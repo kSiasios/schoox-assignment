@@ -2,11 +2,8 @@
 
 function getAllCourses($conn)
 {
-    // FUNCTION THAT RETURNS ALL THE COURSES IN THE DATABASE
-    // PREPARE THE QUERY
     $query = "SELECT * FROM courses;";
 
-    // PREPARE THE STATEMENT & HANDLE ERROR UPON CONNECTION
     $stmt = mysqli_stmt_init($conn);
 
     if (!mysqli_stmt_prepare($stmt, $query)) {
@@ -14,7 +11,6 @@ function getAllCourses($conn)
         return json_encode($error);
     }
 
-    // EXECUTE THE STATEMENT & RETURN THE DATA IN JSON FORMAT
     mysqli_stmt_execute($stmt);
 
     $result = mysqli_stmt_get_result($stmt);
@@ -34,11 +30,8 @@ function getAllCourses($conn)
 
 function getCourseByID($conn, $id)
 {
-    // FUNCTION THAT RETURNS A COURSE THAT MATCHES THE PROVIDED ID
-    // PREPARE THE QUERY
     $query = "SELECT * FROM courses WHERE id = ?;";
 
-    // PREPARE THE STATEMENT & HANDLE ERROR UPON CONNECTION
     $stmt = mysqli_stmt_init($conn);
 
     if (!mysqli_stmt_prepare($stmt, $query)) {
@@ -46,10 +39,8 @@ function getCourseByID($conn, $id)
         return json_encode($error);
     }
 
-    // BIND THE PARAMETER VALUES TO THE QUERY -> ADDED SECURITY
     mysqli_stmt_bind_param($stmt, "s", $id);
 
-    // EXECUTE THE STATEMENT & RETURN THE DATA IN JSON FORMAT
     mysqli_stmt_execute($stmt);
 
     $result = mysqli_stmt_get_result($stmt);
@@ -65,13 +56,10 @@ function getCourseByID($conn, $id)
     return json_encode($response);
 }
 
-function createCourse($conn, $title, $description, $status, $is_premium)
+function createCourse($conn, $title, $description, $status, $isPremium)
 {
-    // FUNCTION THAT CREATES A COURSE USING THE PROVIDED DATA
-    // PREPARE THE QUERY
     $query = "INSERT INTO courses(title, description, status, is_premium, created_at, deleted_at) VALUES (?,?,?,?,?,?)";
 
-    // PREPARE THE STATEMENT & HANDLE ERROR UPON CONNECTION
     $stmt = mysqli_stmt_init($conn);
 
     if (!mysqli_stmt_prepare($stmt, $query)) {
@@ -79,13 +67,16 @@ function createCourse($conn, $title, $description, $status, $is_premium)
         return json_encode($error);
     }
 
-    // CREATE TIMESTAMP TO BE USED FOR THE created_at PARAMETER OF THE NEWLY CREATED COURSE
     $now = date("Y/m/d h:i:sa");
 
-    // BIND THE PARAMETER VALUES TO THE QUERY -> ADDED SECURITY
-    mysqli_stmt_bind_param($stmt, "sssiss", $title, $description, $status, $is_premium, $now, $now);
+    if ($status === "Deleted") {
+        $deletedAt = $now;
+    } else {
+        $deletedAt = "";
+    }
 
-    // EXECUTE THE STATEMENT & RETURN THE DATA IN JSON FORMAT
+    mysqli_stmt_bind_param($stmt, "sssiss", $title, $description, $status, $isPremium, $now, $deletedAt);
+
     mysqli_stmt_execute($stmt);
 
     $response = [
@@ -96,15 +87,12 @@ function createCourse($conn, $title, $description, $status, $is_premium)
     return json_encode($response);
 }
 
-function updateCourse($conn, $id, $title, $description, $status, $is_premium)
+function updateCourse($conn, $id, $title, $description, $status, $isPremium, $deletedAt)
 {
-    // FUNCTION THAT UPDATES A COURSE THAT MATCHES THE GIVEN ID USING THE PROVIDED DATA
-    // PREPARE THE QUERY
     $query = "UPDATE courses
-              SET title = ?, description = ?, status = ?, is_premium = ?
+              SET title = ?, description = ?, status = ?, is_premium = ?, deleted_at = ?
               WHERE id = ?;";
 
-    // PREPARE THE STATEMENT & HANDLE ERROR UPON CONNECTION
     $stmt = mysqli_stmt_init($conn);
 
     if (!mysqli_stmt_prepare($stmt, $query)) {
@@ -112,10 +100,8 @@ function updateCourse($conn, $id, $title, $description, $status, $is_premium)
         return json_encode($error);
     }
 
-    // BIND THE PARAMETER VALUES TO THE QUERY -> ADDED SECURITY
-    mysqli_stmt_bind_param($stmt, "sssii", $title, $description, $status, $is_premium, $id);
+    mysqli_stmt_bind_param($stmt, "sssisi", $title, $description, $status, $isPremium, $deletedAt, $id);
 
-    // EXECUTE THE STATEMENT & RETURN THE DATA IN JSON FORMAT
     mysqli_stmt_execute($stmt);
 
     $response = [
@@ -128,11 +114,8 @@ function updateCourse($conn, $id, $title, $description, $status, $is_premium)
 
 function deleteCourse($conn, $id)
 {
-    // FUNCTION THAT UPDATES A COURSE THAT MATCHES THE GIVEN ID USING THE PROVIDED DATA
-    // PREPARE THE QUERY
     $query = "DELETE FROM courses WHERE id = ?;";
 
-    // PREPARE THE STATEMENT & HANDLE ERROR UPON CONNECTION
     $stmt = mysqli_stmt_init($conn);
 
     if (!mysqli_stmt_prepare($stmt, $query)) {
@@ -140,10 +123,8 @@ function deleteCourse($conn, $id)
         return json_encode($error);
     }
 
-    // BIND THE PARAMETER VALUES TO THE QUERY -> ADDED SECURITY
     mysqli_stmt_bind_param($stmt, "i", $id);
 
-    // EXECUTE THE STATEMENT & RETURN THE DATA IN JSON FORMAT
     mysqli_stmt_execute($stmt);
 
     $response = [
@@ -152,4 +133,29 @@ function deleteCourse($conn, $id)
 
     mysqli_stmt_close($stmt);
     return json_encode($response);
+}
+
+function validation($attributes)
+{
+    $result = ["response" => true, "msg" => ""];
+
+    foreach ($attributes as $type => $value) {
+        if ((empty($value) || !isset($value)) && $type !== "isPremium") {
+            // var_dump($attributes);
+            $result["msg"] .= $type . " is required!\n";
+        }
+
+        if ($type === "status" && ($value !== "Pending" && $value !== "Published" && $value !== "Deleted")) {
+            $result["msg"] .=  "Status should have a value of 'Pending', 'Published' or 'Deleted'!\n";
+        }
+        if ($type === "isPremium" && !is_bool($value)) {
+            $result["msg"] .=  "Is_premium should have a boolean value!\n";
+        }
+    }
+
+    if ($result["msg"]) {
+        $result["response"] = false;
+    }
+
+    return $result;
 }

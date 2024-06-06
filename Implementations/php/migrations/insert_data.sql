@@ -1,16 +1,4 @@
-CREATE DATABASE IF NOT EXISTS schoox;
 USE schoox;
-DROP TABLE IF EXISTS Courses;
-CREATE TABLE IF NOT EXISTS Courses (
-    id INT(255) AUTO_INCREMENT PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    description VARCHAR(1023) NOT NULL,
-    status VARCHAR(12) NOT NULL,
-    is_premium BOOLEAN NOT NULL,
-    created_at VARCHAR(255) NOT NULL,
-    deleted_at VARCHAR(255) NOT NULL
-);
--- TRUNCATE TABLE Courses;
 INSERT INTO Courses (
         title,
         description,
