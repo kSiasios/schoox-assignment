@@ -1,5 +1,6 @@
 import Course from "@/models/course.model";
 import { connectToDB } from "@/utils/database";
+import { default as validateData } from "@/utils/helpers";
 import { NextResponse } from "next/server";
 
 export const GET = async (req: Request) => {
@@ -24,25 +25,21 @@ export const GET = async (req: Request) => {
 export const POST = async (req: Request) => {
   let data = await req.json();
 
-  if (data.status !== "Published" && data.status !== "Pending") {
+  if (!validateData(data)) {
     return NextResponse.json(
       {
-        error: "Status should be 'Published' or 'Pending'",
+        error: "Invalid Data",
       },
       {
-        status: 500,
+        status: 400,
       }
     );
   }
 
   let courseData = {
-    id: data.id,
-    title: data.title,
-    description: data.description,
-    status: data.status,
-    is_premium: data.is_premium,
+    ...data,
     created_at: `${new Date()}`,
-    deleted_at: `${new Date()}`,
+    deleted_at: ` `,
   };
   try {
     await connectToDB();

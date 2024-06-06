@@ -1,5 +1,6 @@
 import Course from "@/models/course.model";
 import { connectToDB } from "@/utils/database";
+import validateData from "@/utils/helpers";
 import { NextResponse } from "next/server";
 
 export const GET = async (
@@ -43,7 +44,41 @@ export const PUT = async (
 ) => {
   const { id } = params;
 
-  return NextResponse.json({ id });
+  let data = await req.json();
+
+  if (!data) {
+    return NextResponse.json(
+      {
+        error: `Missing Data!`,
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  if (!validateData(data)) {
+    return NextResponse.json(
+      {
+        error: "Invalid Data",
+      },
+      {
+        status: 400,
+      }
+    );
+  }
+
+  await connectToDB();
+
+  const course = await Course.findOne({ id: id });
+
+  if (course.status !== "Deleted" && data.status === "Deleted") {
+    data.deleted_at = `${new Date()}`;
+  }
+
+  const res = await Course.updateOne({ id: id }, data);
+
+  return NextResponse.json({ res });
 };
 
 export const DELETE = async (
